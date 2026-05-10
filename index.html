@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>سينما خاصة - تحكم مشترك</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Tahoma, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(255, 209, 102, .18), transparent 35%),
+        linear-gradient(135deg, #130018, #060308 70%);
+      color: #fff;
+    }
+    header {
+      padding: 18px;
+      text-align: center;
+      background: rgba(0,0,0,.35);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    h1 { margin: 0 0 8px; color: #ffd166; font-size: 27px; }
+    .sub { opacity: .85; font-size: 14px; line-height: 1.7; }
+    .wrap {
+      width: min(1240px, 95%);
+      margin: 20px auto;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+    }
+    .card {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.33);
+    }
+    .screen {
+      background: #000;
+      border: 4px solid rgba(255,209,102,.38);
+      border-radius: 18px;
+      min-height: 300px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    video, iframe {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: block;
+      border: 0;
+      background: #000;
+    }
+    .website-frame {
+      aspect-ratio: 16/9;
+      min-height: 520px;
+    }
+    .empty {
+      color: #ccc;
+      text-align: center;
+      padding: 35px;
+      line-height: 1.8;
+    }
+    label {
+      display: block;
+      color: #ffd166;
+      font-weight: bold;
+      margin: 10px 0 6px;
+      font-size: 14px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border: 0;
+      outline: none;
+      border-radius: 13px;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+    input, select { background: rgba(255,255,255,.95); color: #111; }
+    button {
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffd166, #f77f00);
+      color: #1b1022;
+      font-weight: bold;
+    }
+    .secondary {
+      background: rgba(255,255,255,.14);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .green { background: linear-gradient(135deg, #7bd88f, #2dce89); color: #072014; }
+    .red { background: linear-gradient(135deg, #ff5f6d, #c9184a); color: #fff; }
+    .status {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.28);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+    .badge {
+      display: inline-block;
+      background: #ffd166;
+      color: #1b1022;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .control-badge {
+      display: inline-block;
+      background: #7bd88f;
+      color: #072014;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    .viewer-row {
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.09);
+    }
+    .viewer-name { margin-bottom: 8px; line-height: 1.5; }
+    .viewer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .viewer-actions button { padding: 9px; font-size: 13px; margin: 0; }
+    .chat {
+      height: 210px;
+      overflow: auto;
+      background: rgba(0,0,0,.25);
+      border-radius: 14px;
+      padding: 10px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .msg { margin-bottom: 10px; line-height: 1.5; }
+    .msg b { color: #ffd166; }
+    .note { font-size: 13px; opacity: .78; line-height: 1.7; }
+    #cinemaBox { display: none; }
+    @media (max-width: 850px) {
+      .wrap { grid-template-columns: 1fr; }
+      h1 { font-size: 22px; }
+      .screen { min-height: 185px; }
+      .website-frame { min-height: 420px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎬 سينما خاصة - تحكم مشترك</h1>
+    <div class="sub">رابط غرفة + كلمة مرور + إعطاء كنترول للمشاهد + فيديو أو موقع مشترك</div>
+  </header>
+
+  <div class="wrap">
+    <main class="card">
+      <div id="playerArea" class="screen">
+        <div class="empty">ادخل الغرفة أولًا، ثم صاحب التحكم يضع رابط الفيديو أو الموقع</div>
+      </div>
+
+      <div class="status" id="statusBox">الحالة: لم تدخل الغرفة بعد</div>
+
+      <div id="controllerControls" style="display:none;">
+        <label>نوع المحتوى</label>
+        <select id="contentType">
+          <option value="youtube">YouTube فيديو</option>
+          <option value="mp4">MP4 مباشر</option>
+          <option value="website">موقع / صفحة داخلية iframe</option>
+        </select>
+
+        <label>الرابط</label>
+        <input id="contentUrl" placeholder="رابط يوتيوب، MP4 مباشر، أو موقع يسمح بالعرض داخل iframe" />
+
+        <button onclick="setContent()">فتح الرابط للجميع</button>
+        <button class="green" onclick="copyInvite()">نسخ دعوة الغرفة</button>
+
+        <p class="note">
+          مشاهدة موقع كامل معًا تعمل فقط للمواقع التي تسمح بالفتح داخل iframe. يوتيوب كفيديو يعمل أفضل. أما تحكم حقيقي في موقع كامل مثل متصفح مشترك يحتاج نظام بث شاشة أو Browser Streaming منفصل.
+        </p>
+      </div>
+    </main>
+
+    <aside>
+      <section class="card" id="loginBox">
+        <label>اسمك</label>
+        <input id="nameInput" placeholder="مثال: أبو فريدة" />
+
+        <label>كود الغرفة</label>
+        <input id="roomInput" placeholder="مثال: FARIDA-NIGHT" />
+
+        <label>كلمة مرور الغرفة</label>
+        <input id="passwordInput" placeholder="مثال: 1234" type="password" />
+
+        <button onclick="joinRoom()">دخول / إنشاء الغرفة</button>
+        <button class="secondary" onclick="makeRandomRoom()">توليد كود غرفة</button>
+        <button class="green" onclick="copyInviteBeforeJoin()">نسخ رابط الدعوة</button>
+      </section>
+
+      <section class="card" id="cinemaBox">
+        <h3>بيانات الغرفة</h3>
+        <div class="status" id="roomInfo"></div>
+        <button class="green" onclick="copyInvite()">نسخ دعوة واتساب</button>
+      </section>
+
+      <section class="card">
+        <h3>المتفرجون والتحكم</h3>
+        <div class="viewers" id="viewersBox">لا يوجد متفرجون بعد</div>
+      </section>
+
+      <section class="card">
+        <h3>الدردشة</h3>
+        <div class="chat" id="chatBox"></div>
+        <input id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter') sendChat()" />
+        <button onclick="sendChat()">إرسال</button>
+      </section>
+    </aside>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    let roomCode = "";
+    let roomPassword = "";
+    let userName = "";
+    let isHost = false;
+    let canControl = false;
+    let myId = "";
+    let player = null;
+    let ytReady = false;
+    let currentContentType = "";
+    let ignoreEvents = false;
+
+    const playerArea = document.getElementById("playerArea");
+    const statusBox = document.getElementById("statusBox");
+    const controllerControls = document.getElementById("controllerControls");
+
+    function makeRandomRoom() {
+      const code = "ROOM-" + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById("roomInput").value = code;
+    }
+
+    function cleanRoomCode(code) {
+      return String(code || "").trim().replace(/\s+/g, "-").toUpperCase();
+    }
+
+    function roomLink() {
+      return location.origin + location.pathname + "?room=" + encodeURIComponent(roomCode || cleanRoomCode(document.getElementById("roomInput").value));
+    }
+
+    function joinRoom() {
+      userName = document.getElementById("nameInput").value.trim() || "مشاهد";
+      roomCode = cleanRoomCode(document.getElementById("roomInput").value);
+      roomPassword = document.getElementById("passwordInput").value.trim();
+
+      if (!roomCode) return alert("اكتب كود الغرفة");
+      if (!roomPassword) return alert("اكتب كلمة مرور للغرفة");
+
+      socket.emit("create-or-join-room", { roomCode, password: roomPassword, name: userName });
+      statusBox.innerHTML = "الحالة: جاري الدخول...";
+    }
+
+    function copyInviteBeforeJoin() {
+      const code = cleanRoomCode(document.getElementById("roomInput").value);
+      const pass = document.getElementById("passwordInput").value.trim();
+      if (!code) return alert("اكتب أو ولّد كود الغرفة أولًا");
+      const url = location.origin + location.pathname + "?room=" + encodeURIComponent(code);
+      const text = "🎬 انضم إلى السينما الخاصة\n" + url + "\n🔑 كلمة المرور: " + (pass || "اكتبها هنا");
+      navigator.clipboard.writeText(text);
+      alert("تم نسخ الدعوة");
+    }
+
+    function copyInvite() {
+      const text = "🎬 انضم إلى السينما الخاصة\n" + roomLink() + "\n🔑 كلمة المرور: " + roomPassword;
+      navigator.clipboard.writeText(text);
+      alert("تم نسخ دعوة الغرفة");
+    }
+
+    function detectYoutubeId(url) {
+      try {
+        const u = new URL(url);
+        if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+        if (u.searchParams.get("v")) return u.searchParams.get("v");
+        if (u.pathname.includes("/embed/")) return u.pathname.split("/embed/")[1].split("?")[0];
+      } catch(e) {}
+      return "";
+    }
+
+    function youtubeEmbedUrl(url) {
+      const id = detectYoutubeId(url);
+      return id ? "https://www.youtube.com/embed/" + id + "?enablejsapi=1&playsinline=1&rel=0" : "";
+    }
+
+    function setContent() {
+      if (!canControl) return alert("ليس لديك صلاحية التحكم");
+      const contentType = document.getElementById("contentType").value;
+      const contentUrl = document.getElementById("contentUrl").value.trim();
+      if (!contentUrl) return alert("ضع الرابط");
+      socket.emit("set-content", { roomCode, contentUrl, contentType });
+    }
+
+    function loadContent(contentType, contentUrl, startTime = 0, shouldPlay = false) {
+      currentContentType = contentType;
+      playerArea.innerHTML = "";
+      playerArea.classList.remove("website-frame");
+
+      if (contentType === "youtube") {
+        const id = detectYoutubeId(contentUrl);
+        if (!id) {
+          playerArea.innerHTML = "<div class='empty'>رابط يوتيوب غير صحيح</div>";
+          return;
+        }
+        const div = document.createElement("div");
+        div.id = "youtubePlayer";
+        div.style.width = "100%";
+        playerArea.appendChild(div);
+
+        if (!window.YT) {
+          const tag = document.createElement("script");
+          tag.src = "https://www.youtube.com/iframe_api";
+          document.body.appendChild(tag);
+          window.onYouTubeIframeAPIReady = () => createYoutubePlayer(id, startTime, shouldPlay);
+        } else {
+          createYoutubePlayer(id, startTime, shouldPlay);
+        }
+      }
+
+      if (contentType === "mp4") {
+        const video = document.createElement("video");
+        video.controls = true;
+        video.src = contentUrl;
+        video.currentTime = startTime || 0;
+        playerArea.appendChild(video);
+        player = video;
+
+        video.addEventListener("play", () => {
+          if (canControl && !ignoreEvents) socket.emit("host-control", { roomCode, action: "play", currentTime: video.currentTime });
+        });
+        video.addEventListener("pause", () => {
+          if (canControl && !ignoreEvents) socket.emit("host-control", { roomCode, action: "pause", currentTime: video.currentTime });
+        });
+        video.addEventListener("seeked", () => {
+          if (canControl && !ignoreEvents) socket.emit("host-seek", { roomCode, currentTime: video.currentTime });
+        });
+
+        if (shouldPlay) video.play().catch(() => {});
+      }
+
+      if (contentType === "website") {
+        playerArea.classList.add("website-frame");
+        const iframe = document.createElement("iframe");
+        iframe.src = contentUrl;
+        iframe.allow = "autoplay; fullscreen; picture-in-picture";
+        iframe.referrerPolicy = "no-referrer-when-downgrade";
+        playerArea.appendChild(iframe);
+      }
+    }
+
+    function createYoutubePlayer(videoId, startTime, shouldPlay) {
+      ytReady = false;
+      player = new YT.Player("youtubePlayer", {
+        width: "100%",
+        height: "500",
+        videoId,
+        playerVars: { start: Math.floor(startTime || 0), playsinline: 1, rel: 0 },
+        events: {
+          onReady: () => {
+            ytReady = true;
+            if (startTime) player.seekTo(startTime, true);
+            if (shouldPlay) player.playVideo();
+          },
+          onStateChange: (event) => {
+            if (!canControl || ignoreEvents || !ytReady) return;
+            const t = player.getCurrentTime ? player.getCurrentTime() : 0;
+            if (event.data === YT.PlayerState.PLAYING) {
+              socket.emit("host-control", { roomCode, action: "play", currentTime: t });
+            }
+            if (event.data === YT.PlayerState.PAUSED) {
+              socket.emit("host-control", { roomCode, action: "pause", currentTime: t });
+            }
+          }
+        }
+      });
+    }
+
+    function applySync(action, currentTime) {
+      ignoreEvents = true;
+
+      if (currentContentType === "youtube" && player && ytReady) {
+        player.seekTo(currentTime, true);
+        if (action === "play") player.playVideo();
+        if (action === "pause") player.pauseVideo();
+      }
+
+      if (currentContentType === "mp4" && player) {
+        player.currentTime = currentTime;
+        if (action === "play") player.play().catch(() => {});
+        if (action === "pause") player.pause();
+      }
+
+      setTimeout(() => ignoreEvents = false, 700);
+    }
+
+    function grantControl(targetId, allow) {
+      if (!isHost) return alert("المنظّم فقط يستطيع إعطاء التحكم");
+      socket.emit("grant-control", { roomCode, targetId, allow });
+    }
+
+    function sendChat() {
+      const input = document.getElementById("chatInput");
+      const message = input.value.trim();
+      if (!message || !roomCode) return;
+      socket.emit("chat-message", { roomCode, name: userName, message });
+      input.value = "";
+    }
+
+    function updateStatus() {
+      controllerControls.style.display = canControl ? "block" : "none";
+      statusBox.innerHTML =
+        "الغرفة: <b>" + roomCode + "</b> " +
+        (isHost ? "<span class='badge'>أنت المنظّم</span>" : "") +
+        (canControl && !isHost ? "<span class='control-badge'>معك كنترول</span>" : "") +
+        (!canControl && !isHost ? "أنت مشاهد فقط" : "");
+    }
+
+    socket.on("join-error", (msg) => {
+      alert(msg);
+      statusBox.innerHTML = "الحالة: فشل الدخول";
+    });
+
+    socket.on("room-state", (state) => {
+      myId = state.yourId;
+      isHost = state.isHost;
+      canControl = state.canControl;
+
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("cinemaBox").style.display = "block";
+      document.getElementById("roomInfo").innerHTML =
+        "الغرفة: <b>" + roomCode + "</b><br>" +
+        (isHost ? "<span class='badge'>أنت المنظّم</span>" : "") +
+        (canControl && !isHost ? "<span class='control-badge'>معك كنترول</span>" : "") +
+        "<br>الرابط: " + roomLink();
+
+      updateStatus();
+
+      if (state.contentUrl) {
+        loadContent(state.contentType, state.contentUrl, state.currentTime, state.isPlaying);
+      }
+    });
+
+    socket.on("control-permission", (data) => {
+      isHost = data.isHost;
+      canControl = data.canControl;
+      updateStatus();
+      if (canControl) {
+        alert("تم إعطاؤك صلاحية التحكم");
+      }
+    });
+
+    socket.on("content-changed", (data) => {
+      loadContent(data.contentType, data.contentUrl, data.currentTime, data.isPlaying);
+    });
+
+    socket.on("sync-control", (data) => {
+      applySync(data.action, data.currentTime);
+    });
+
+    socket.on("viewers-update", (viewers) => {
+      const box = document.getElementById("viewersBox");
+
+      box.innerHTML = viewers.map(v => {
+        const badges =
+          (v.isHost ? " <span class='badge'>منظّم</span>" : "") +
+          (v.canControl && !v.isHost ? " <span class='control-badge'>كنترول</span>" : "");
+
+        let actions = "";
+        if (isHost && v.id !== myId && !v.isHost) {
+          actions = `
+            <div class="viewer-actions">
+              <button class="green" onclick="grantControl('${v.id}', true)">أعطه كنترول</button>
+              <button class="red" onclick="grantControl('${v.id}', false)">اسحب الكنترول</button>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="viewer-row">
+            <div class="viewer-name">${v.name}${badges}</div>
+            ${actions}
+          </div>
+        `;
+      }).join("") || "لا يوجد متفرجون";
+    });
+
+    socket.on("chat-message", (data) => {
+      const box = document.getElementById("chatBox");
+      const div = document.createElement("div");
+      div.className = "msg";
+      div.innerHTML = "<b>" + data.name + ":</b> " + data.message + "<br><small>" + data.time + "</small>";
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    });
+
+    const params = new URLSearchParams(location.search);
+    const roomFromLink = params.get("room");
+    if (roomFromLink) {
+      document.getElementById("roomInput").value = roomFromLink;
+    } else {
+      makeRandomRoom();
+    }
+  </script>
+</body>
+</html>
