@@ -1,324 +1,93 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>🎬 سينما خاصة</title>
-
-<link rel="stylesheet" href="style.css">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>سينما خاصة - تحكم مشترك</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
 <div id="splashScreen">
+  <div class="splash-card">
+    <h1>🎬 سينما خاصة</h1>
+    <p>غرفة بكلمة مرور + رفع فيديو + مشاركة شاشة</p>
 
-  <div class="sp-box">
+    <label>اسمك</label>
+    <input id="spName" placeholder="مثال: أبو فريدة" />
 
-    <div class="sp-card">
+    <label>كود الغرفة</label>
+    <input id="spRoom" placeholder="ROOM-1234" />
 
-      <div class="sp-title">
-        🎬 سينما خاصة
-      </div>
+    <label>كلمة المرور</label>
+    <input id="spPass" type="password" placeholder="1234" />
 
-      <div class="sp-sub">
-        مشاهدة مشتركة + رفع فيديو + مشاركة شاشة
-      </div>
-
-      <label>
-        اسمك
-      </label>
-
-      <input
-        id="spName"
-        placeholder="مثال: أبو فريدة"
-      >
-
-      <label>
-        كود الغرفة
-      </label>
-
-      <input
-        id="spRoom"
-        placeholder="ROOM-1234"
-      >
-
-      <label>
-        كلمة المرور
-      </label>
-
-      <input
-        id="spPass"
-        type="password"
-        placeholder="1234"
-      >
-
-      <button onclick="enterRoom()">
-        دخول الغرفة
-      </button>
-
-    </div>
-
+    <button onclick="enterRoom()">دخول الغرفة</button>
+    <button class="secondary" onclick="randomRoom()">توليد كود غرفة</button>
   </div>
-
 </div>
 
 <header>
-
-  <h1>
-    🎬 سينما خاصة - تحكم مشترك
-  </h1>
-
-  <div class="sub">
-    رفع فيديوهات + تشغيل MP4 + مشاركة شاشة + دردشة
-  </div>
-
+  <h1>🎬 سينما خاصة - تحكم مشترك</h1>
+  <div class="sub">رفع فيديوهات + تشغيل MP4 + مشاركة شاشة + دردشة</div>
 </header>
 
-<div class="wrap">
+<div class="layout">
+  <aside class="side">
+    <section class="card">
+      <h3>رفع فيديو MP4</h3>
+      <input type="file" id="videoFile" accept="video/*" />
+      <div class="progress-wrap" id="uploadProgressWrap">
+        <div class="progress-bar" id="uploadProgressBar"></div>
+      </div>
+      <button class="green" onclick="uploadVideo()">رفع وتشغيل الفيديو</button>
+      <hr />
+      <button class="purple" id="screenShareBtn" onclick="toggleScreenShare()">مشاركة الشاشة</button>
+      <div class="small-note">مشاركة الشاشة تعمل أفضل على الكمبيوتر من Chrome أو Edge.</div>
+    </section>
 
-  <div class="card">
+    <section class="card">
+      <h3>رابط مباشر</h3>
+      <select id="contentType">
+        <option value="youtube">YouTube</option>
+        <option value="mp4">MP4 مباشر</option>
+        <option value="website">موقع iframe</option>
+      </select>
+      <input id="contentUrl" placeholder="ضع رابط الفيديو أو الموقع" />
+      <button onclick="setContent()">تشغيل الرابط للجميع</button>
+    </section>
 
-    <div
-      class="screen"
-      id="playerArea"
-    >
+    <section class="card">
+      <h3>المتفرجون والتحكم</h3>
+      <div id="viewersBox">لا يوجد متفرجون بعد</div>
+    </section>
 
-      <div class="empty">
-        لم يتم تشغيل أي محتوى بعد
+    <section class="card">
+      <h3>الدردشة</h3>
+      <div class="chat" id="chatBox"></div>
+      <input id="chatInput" placeholder="اكتب رسالة..." onkeydown="if(event.key==='Enter') sendChat()" />
+      <button class="blue" onclick="sendChat()">إرسال</button>
+    </section>
+  </aside>
+
+  <main class="main">
+    <section class="screen-card">
+      <div id="playerArea" class="screen">
+        <div class="empty">لم يتم تشغيل أي محتوى بعد</div>
       </div>
 
-    </div>
+      <div id="screenShareIndicator">📡 مشاركة الشاشة تعمل الآن</div>
 
-    <div
-      id="screenShareIndicator"
-    >
-      مشاركة الشاشة تعمل الآن
-    </div>
-
-    <div class="status">
-
-      الغرفة:
-      <span id="roomCodeView">
-        ---
-      </span>
-
-    </div>
-
-  </div>
-
-  <div>
-
-    <div class="card">
-
-      <label>
-        رفع فيديو MP4
-      </label>
-
-      <input
-        type="file"
-        id="videoFile"
-        accept="video/mp4"
-      >
-
-      <button
-        class="green"
-        onclick="uploadVideo()"
-      >
-        رفع وتشغيل الفيديو
-      </button>
-
-      <hr>
-
-      <button
-        class="purple"
-        onclick="toggleScreenShare()"
-      >
-        مشاركة الشاشة
-      </button>
-
-    </div>
-
-    <div class="card">
-
-      <h3>
-        الدردشة
-      </h3>
-
-      <div
-        class="chat"
-        id="chatBox"
-      >
+      <div class="room-bar">
+        <span>الغرفة: <b id="roomCodeView">---</b></span>
+        <span id="hostBadge"></span>
       </div>
-
-      <input
-        id="chatInput"
-        placeholder="اكتب رسالة..."
-      >
-
-      <button
-        class="blue"
-        onclick="sendChat()"
-      >
-        إرسال
-      </button>
-
-    </div>
-
-  </div>
-
+    </section>
+  </main>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
 <script src="app.js"></script>
-
-<script>
-
-const socket = io();
-
-let roomCode = "";
-let userName = "";
-
-function enterRoom(){
-
-  roomCode =
-    document
-      .getElementById("spRoom")
-      .value
-      .trim();
-
-  const password =
-    document
-      .getElementById("spPass")
-      .value
-      .trim();
-
-  userName =
-    document
-      .getElementById("spName")
-      .value
-      .trim();
-
-  if(!roomCode){
-
-    alert("اكتب كود الغرفة");
-
-    return;
-  }
-
-  socket.emit(
-    "create-or-join-room",
-    {
-      roomCode,
-      password,
-      name:userName
-    }
-  );
-
-  document
-    .getElementById("roomCodeView")
-    .innerText = roomCode;
-
-  document
-    .getElementById("splashScreen")
-    .style.display = "none";
-
-}
-
-async function uploadVideo(){
-
-  const file =
-    document
-      .getElementById("videoFile")
-      .files[0];
-
-  if(!file){
-
-    alert("اختر فيديو");
-
-    return;
-  }
-
-  const formData = new FormData();
-
-  formData.append("video",file);
-
-  const res = await fetch(
-    "/upload",
-    {
-      method:"POST",
-      body:formData
-    }
-  );
-
-  const data = await res.json();
-
-  if(!data.ok){
-
-    alert("فشل الرفع");
-
-    return;
-  }
-
-  playVideo(data.url);
-
-}
-
-function playVideo(url){
-
-  const playerArea =
-    document
-      .getElementById("playerArea");
-
-  playerArea.innerHTML = "";
-
-  const video =
-    document.createElement("video");
-
-  video.src = url;
-
-  video.controls = true;
-
-  video.autoplay = true;
-
-  video.preload = "auto";
-
-  playerArea.appendChild(video);
-
-}
-
-function sendChat(){
-
-  const input =
-    document
-      .getElementById("chatInput");
-
-  const message =
-    input.value.trim();
-
-  if(!message) return;
-
-  const box =
-    document
-      .getElementById("chatBox");
-
-  const div =
-    document.createElement("div");
-
-  div.innerHTML =
-    "<b>"+userName+"</b>: "+message;
-
-  box.appendChild(div);
-
-  box.scrollTop = box.scrollHeight;
-
-  input.value = "";
-
-}
-
-</script>
-
 </body>
 </html>
