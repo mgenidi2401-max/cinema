@@ -42,6 +42,15 @@ io.on("connection", socket=>{
   socket.on("host-seek", ({roomCode,currentTime})=>{ const room=getRoom(roomCode); if(!canControl(room,socket.id)) return; room.currentTime=Number(currentTime)||0; socket.to(roomCode).emit("sync-control",{action:room.isPlaying?"play":"pause",currentTime:room.currentTime}); });
   socket.on("grant-control", ({roomCode,targetId,allow})=>{ const room=getRoom(roomCode); if(socket.id!==room.hostId || !room.viewers[targetId]) return; if(allow) room.controllerIds[targetId]=true; else delete room.controllerIds[targetId]; io.to(roomCode).emit("viewers-update", viewersList(room)); io.to(targetId).emit("control-permission",{canControl:canControl(room,targetId),isHost:targetId===room.hostId}); });
   socket.on("chat-message", ({roomCode,name,message})=>{ if(!roomCode||!message) return; io.to(roomCode).emit("chat-message",{name:name||"مشاهد",message:String(message).slice(0,300),time:new Date().toLocaleTimeString("ar-EG")}); });
+  // ===== SCREEN SHARE SIGNALING =====
+  socket.on("screen-share-start",({roomCode})=>{const room=getRoom(roomCode);if(!canControl(room,socket.id))return;room.screenShareHostId=socket.id;socket.to(roomCode).emit("screen-share-started",{hostId:socket.id});});
+  socket.on("screen-share-stop",({roomCode})=>{const room=rooms[roomCode];if(room&&room.screenShareHostId===socket.id)room.screenShareHostId=null;socket.to(roomCode).emit("screen-share-stopped");});
+  socket.on("ss-viewer-ready",({roomCode,to,from})=>{io.to(to).emit("ss-viewer-ready",{from:from||socket.id});});
+  socket.on("ss-offer",({roomCode,to,sdp})=>{io.to(to).emit("ss-offer",{from:socket.id,sdp});});
+  socket.on("ss-answer",({roomCode,to,sdp})=>{io.to(to).emit("ss-answer",{from:socket.id,sdp});});
+  socket.on("ss-ice",({roomCode,to,c})=>{io.to(to).emit("ss-ice",{from:socket.id,c});});
+  socket.on("ss-ice-v",({roomCode,to,c})=>{io.to(to).emit("ss-ice-v",{from:socket.id,c});});
+
   socket.on("disconnect", ()=>{ for(const roomCode of Object.keys(rooms)){ const room=rooms[roomCode]; if(!room.viewers[socket.id]) continue; delete room.viewers[socket.id]; delete room.controllerIds[socket.id]; if(room.hostId===socket.id){ const next=Object.keys(room.viewers)[0]; room.hostId=next||null; room.controllerIds={}; if(next) room.viewers[next].isHost=true; } io.to(roomCode).emit("viewers-update", viewersList(room)); for(const id of Object.keys(room.viewers)) io.to(id).emit("control-permission",{canControl:canControl(room,id),isHost:id===room.hostId}); if(Object.keys(room.viewers).length===0) delete rooms[roomCode]; }});
 });
 const PORT = process.env.PORT || 3000; server.listen(PORT,()=>console.log("Private Cinema running on port "+PORT));
