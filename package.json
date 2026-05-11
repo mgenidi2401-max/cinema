@@ -1,6 +1,6 @@
 {
-  "name": "private-cinema-upload-files",
-  "version": "4.0.0",
+  "name": "cinema-fixed-realtime",
+  "version": "1.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
